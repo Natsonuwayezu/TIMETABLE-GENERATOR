@@ -107,16 +107,15 @@
   @page{ size: landscape; margin: 10mm; }
   @media print{
     body{ background:#fff !important; }
-    body *{ visibility:hidden; }
-    #printArea, #printArea *{ visibility:visible; }
-    #printArea{ display:block; position:absolute; left:0; top:0; width:100%; }
+    header, nav, #pages{ display:none !important; }
+    #printArea{ display:block !important; }
     .print-page{
       page-break-after: always; width:100%; height:186mm; padding:8mm 10mm;
       display:flex; flex-direction:column; box-sizing:border-box;
     }
     .print-page:last-child{ page-break-after: auto; }
-    .print-title{ font-family:"Georgia","Times New Roman",serif; font-size:26pt; font-weight:700; margin:0 0 2mm; }
-    .print-subtitle{ font-family:Arial, sans-serif; font-size:11pt; color:#555; margin:0 0 6mm; }
+    .print-title{ font-family:"Georgia","Times New Roman",serif; font-size:26pt; font-weight:700; margin:0 0 2mm; text-align:center; text-transform:uppercase; letter-spacing:0.02em; }
+    .print-subtitle{ font-family:Arial, sans-serif; font-size:11pt; color:#555; margin:0 0 6mm; text-align:center; }
     table.print-table{ border-collapse:collapse; width:100%; table-layout:fixed; flex:1; }
     table.print-table th, table.print-table td{
       border:1.5px solid #888; text-align:center; vertical-align:middle; font-family:Arial, sans-serif;
@@ -143,7 +142,7 @@
       <h1>Ecole La Fontaine 2026–2027 — Timetable Builder</h1>
       <p>Pick a subject per slot. The teacher fills in automatically. Options that would break a rule are greyed out — hover a greyed option to see why.</p>
     </div>
-    <button class="print-global" id="printAllBtn">🖨 Print all (PDF)</button>
+    <button class="print-global" id="printAllBtn">🖨 Print all (landscape PDF)</button>
   </div>
 </header>
 
@@ -571,7 +570,7 @@ function classPrintPage(cls){
     return `<td class="subjectcell" style="background:${SUBJECT_COLORS[s]||'#fff'}">${s}<span class="sub">${teacherLabel(t)}</span></td>`;
   }).join("");
   return `<div class="print-page">
-    <div class="print-title">${cls} — Weekly Timetable</div>
+    <div class="print-title">${cls} Weekly Timetable</div>
     <div class="print-subtitle">Ecole La Fontaine · 2026–2027 School Year</div>
     ${printTableHTML(DAYS, rowsFn)}
   </div>`;
@@ -590,16 +589,29 @@ function teacherPrintPage(t){
     return `<td class="subjectcell" style="background:${SUBJECT_COLORS[found[1]]||'#fff'}">${found[1]}<span class="sub">${found[0]}</span></td>`;
   }).join("");
   return `<div class="print-page">
-    <div class="print-title">${teacherLabel(t)} — Weekly Timetable</div>
+    <div class="print-title">${teacherLabel(t)} Weekly Timetable</div>
     <div class="print-subtitle">Ecole La Fontaine · 2026–2027 School Year</div>
     ${printTableHTML(DAYS, rowsFn)}
   </div>`;
 }
 
+function slugName(name){
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g,"") // strip accents
+    .replace(/\s+/g,"_").toUpperCase();
+}
+const ORIGINAL_TITLE = document.title;
+function withPrintTitle(title, fn){
+  document.title = title;
+  const restore = ()=>{ document.title = ORIGINAL_TITLE; window.removeEventListener("afterprint", restore); };
+  window.addEventListener("afterprint", restore);
+  fn();
+}
+
 function printOne(kind, key){
   const area = document.getElementById("printArea");
   area.innerHTML = kind==="class" ? classPrintPage(key) : teacherPrintPage(key);
-  window.print();
+  const label = kind==="class" ? key : teacherLabel(key);
+  withPrintTitle(`${slugName(label)}_WEEKLY_TIMETABLE`, ()=> window.print());
 }
 
 function printAll(){
@@ -608,7 +620,7 @@ function printAll(){
   CLASSES.forEach(c=> html += classPrintPage(c));
   TEACHERS.forEach(t=> html += teacherPrintPage(t));
   area.innerHTML = html;
-  window.print();
+  withPrintTitle("ECOLE_LA_FONTAINE_ALL_WEEKLY_TIMETABLES", ()=> window.print());
 }
 document.getElementById("printAllBtn").onclick = printAll;
 
