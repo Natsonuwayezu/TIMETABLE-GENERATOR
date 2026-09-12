@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecole La Fontaine — Timetable Builder</title>
+<style>
+  :root{
+    --ink:#1f2a24; --paper:#f6f5f0; --panel:#ffffff; --line:#d8d4c8;
+    --accent:#2f6f4f; --accent-soft:#e4efe8; --warn:#b5651d; --danger:#a33;
+    --muted:#8a8578;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:"Georgia","Times New Roman",serif; background:var(--paper); color:var(--ink);
+  }
+  header{
+    padding:20px 24px 8px; border-bottom:2px solid var(--ink);
+  }
+  header h1{ margin:0 0 4px; font-size:1.5rem; font-weight:700; }
+  header p{ margin:0 0 14px; color:var(--muted); font-family:Arial, sans-serif; font-size:0.85rem; }
+  nav{
+    display:flex; flex-wrap:wrap; gap:6px; padding:0 24px; background:var(--paper);
+    border-bottom:1px solid var(--line); position:sticky; top:0; z-index:5; padding-top:8px;
+  }
+  nav button{
+    font-family:Arial, sans-serif; font-size:0.85rem; padding:8px 14px; border:1px solid var(--line);
+    border-bottom:none; background:var(--panel); color:var(--ink); cursor:pointer; border-radius:6px 6px 0 0;
+  }
+  nav button.active{ background:var(--accent); color:#fff; border-color:var(--accent); font-weight:700; }
+  main{ padding:18px 24px 60px; }
+  section.page{ display:none; }
+  section.page.active{ display:block; }
+
+  .toolbar{
+    display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:14px;
+    font-family:Arial, sans-serif; font-size:0.82rem;
+  }
+  .toolbar button{
+    font-family:Arial, sans-serif; font-size:0.8rem; padding:7px 12px; border:1px solid var(--ink);
+    background:var(--panel); border-radius:5px; cursor:pointer;
+  }
+  .toolbar button:hover{ background:#eee; }
+  .toolbar input[type=file]{ font-family:Arial, sans-serif; font-size:0.78rem; }
+
+  .legend{
+    display:flex; gap:14px; flex-wrap:wrap; font-family:Arial, sans-serif; font-size:0.75rem;
+    color:var(--muted); margin-bottom:14px;
+  }
+  .legend span{ display:inline-flex; align-items:center; gap:5px; }
+  .swatch{ width:12px; height:12px; border-radius:3px; display:inline-block; border:1px solid #999; }
+
+  table.tt{ border-collapse:collapse; width:100%; margin-bottom:10px; font-family:Arial, sans-serif; }
+  table.tt th, table.tt td{
+    border:1px solid var(--line); padding:4px; text-align:center; font-size:0.78rem; vertical-align:middle;
+  }
+  table.tt th{ background:var(--ink); color:#fff; font-weight:600; padding:7px 4px; }
+  table.tt td.slotlabel{ background:#efece2; font-weight:700; width:70px; }
+  table.tt td.timelabel{ background:#efece2; color:var(--muted); width:80px; font-size:0.7rem; }
+  table.tt td.break-row{ background:#e6e2d6; color:var(--muted); font-style:italic; font-size:0.72rem; }
+  table.tt td.noschool{ background:#eee; color:#bbb; }
+
+  select.slot{
+    width:100%; padding:6px 2px; font-family:Arial, sans-serif; font-size:0.76rem; border-radius:4px;
+    border:1px solid #bbb; background:#fff; cursor:pointer;
+  }
+  select.slot.filled{ font-weight:700; }
+  select.slot.soft-warn{ border:2px solid var(--warn); }
+  select.slot:focus{ outline:2px solid var(--accent); }
+  option:disabled{ color:#bbb; }
+
+  .teacher-tag{ display:block; font-size:0.66rem; color:#555; margin-top:2px; }
+
+  .counters{
+    display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; font-family:Arial, sans-serif;
+  }
+  .chip{
+    border:1px solid var(--line); border-radius:14px; padding:4px 10px; font-size:0.72rem; background:var(--panel);
+  }
+  .chip.done{ background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
+  .chip.over{ background:#fbeaea; border-color:var(--danger); color:var(--danger); }
+
+  .note{ font-family:Arial, sans-serif; font-size:0.78rem; color:var(--muted); margin:6px 0 16px; line-height:1.5; }
+
+  .all-classes-table td{ font-size:0.68rem; padding:3px; }
+  .all-classes-table th{ font-size:0.7rem; }
+
+  .status-banner{
+    font-family:Arial, sans-serif; font-size:0.8rem; padding:10px 14px; border-radius:6px; margin-bottom:14px;
+  }
+  .status-banner.ok{ background:var(--accent-soft); color:var(--accent); border:1px solid var(--accent); }
+  .status-banner.pending{ background:#fff7e6; color:#8a6413; border:1px solid #d9b464; }
+
+  .nav-group-label{
+    font-family:Arial, sans-serif; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em;
+    color:var(--muted); align-self:center; padding:0 4px;
+  }
+  .print-global{
+    font-family:Arial, sans-serif; font-size:0.8rem; padding:7px 14px; border:1px solid var(--ink);
+    background:var(--ink); color:#fff; border-radius:5px; cursor:pointer; margin-left:auto;
+  }
+  header .head-row{ display:flex; align-items:flex-start; gap:16px; }
+  header .head-row > div:first-child{ flex:1; }
+
+  /* ---------- PRINT ---------- */
+  #printArea{ display:none; }
+  @page{ size: landscape; margin: 10mm; }
+  @media print{
+    body{ background:#fff !important; }
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{ display:block; position:absolute; left:0; top:0; width:100%; }
+    .print-page{
+      page-break-after: always; width:100%; height:186mm; padding:8mm 10mm;
+      display:flex; flex-direction:column; box-sizing:border-box;
+    }
+    .print-page:last-child{ page-break-after: auto; }
+    .print-title{ font-family:"Georgia","Times New Roman",serif; font-size:26pt; font-weight:700; margin:0 0 2mm; }
+    .print-subtitle{ font-family:Arial, sans-serif; font-size:11pt; color:#555; margin:0 0 6mm; }
+    table.print-table{ border-collapse:collapse; width:100%; table-layout:fixed; flex:1; }
+    table.print-table th, table.print-table td{
+      border:1.5px solid #888; text-align:center; vertical-align:middle; font-family:Arial, sans-serif;
+    }
+    table.print-table th{ background:#1f2a24 !important; color:#fff !important; font-size:15pt; padding:8pt 2pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.print-table td.slotlabel{ background:#efece2 !important; font-weight:700; font-size:12pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.print-table td.timelabel{ background:#efece2 !important; color:#555; font-size:10.5pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.print-table td.break-row{ background:#e6e2d6 !important; font-style:italic; color:#777; font-size:11pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.print-table td.noschool{ background:#f0f0f0 !important; color:#bbb; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.print-table td.subjectcell{
+      font-size:14pt; font-weight:700; padding:2pt; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    table.print-table td.subjectcell .sub{ display:block; font-size:10.5pt; font-weight:400; color:#333; margin-top:2pt; }
+    table.print-table td.emptycell{ background:#fff; }
+    table.print-table tr{ height:1px; } /* forces even row distribution when table has flex height */
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-row">
+    <div>
+      <h1>Ecole La Fontaine 2026–2027 — Timetable Builder</h1>
+      <p>Pick a subject per slot. The teacher fills in automatically. Options that would break a rule are greyed out — hover a greyed option to see why.</p>
+    </div>
+    <button class="print-global" id="printAllBtn">🖨 Print all (PDF)</button>
+  </div>
+</header>
+
+<nav id="tabs"></nav>
+<main id="pages"></main>
+<div id="printArea"></div>
+
+<script>
+/* ============================= DATA MODEL ============================= */
+const DAYS = ["Mon","Tue","Wed","Thu","Fri"];
+const DAY_PERIODS = {
+  Mon:["p1","p2","p3","p4","p5","p6","p7","p8","p9"],
+  Tue:["p1","p2","p3","p4","p5","p6","p7","p8","p9"],
+  Wed:["p1","p2","p3","p4","p5","p6","p7","p8","p9"],
+  Thu:["p1","p2","p3","p4","p5","p6","p7","p8","p9"],
+  Fri:["p1","p2","p3","p4","p5","p6","p7","p8"],
+};
+const PERIOD_TIME = {
+  p1:"8:20–9:00", p2:"9:00–9:40", p3:"9:40–10:20",
+  p4:"10:40–11:20", p5:"11:20–12:00",
+  p6:"13:40–14:20", p7:"14:20–15:00", p8:"15:00–15:40", p9:"15:40–16:20",
+};
+const ROW_LAYOUT = [
+  ["p1","period"], ["p2","period"], ["p3","period"],
+  ["BREAK","break"],
+  ["p4","period"], ["p5","period"],
+  ["LUNCH","lunch"],
+  ["p6","period"], ["p7","period"], ["p8","period"], ["p9","period"],
+];
+const MORNING = new Set(["p1","p2","p3","p4","p5"]);
+const AFTERNOON = new Set(["p6","p7","p8","p9"]);
+const BLOCKS = {
+  Mon:[["p1","p2","p3"],["p4","p5"],["p6","p7","p8","p9"]],
+  Tue:[["p1","p2","p3"],["p4","p5"],["p6","p7","p8","p9"]],
+  Wed:[["p1","p2","p3"],["p4","p5"],["p6","p7","p8","p9"]],
+  Thu:[["p1","p2","p3"],["p4","p5"],["p6","p7","p8","p9"]],
+  Fri:[["p1","p2","p3"],["p4","p5"],["p6","p7","p8"]],
+};
+const ISAIE_SLOTS = new Set();
+for (const d of DAYS){
+  for (const p of DAY_PERIODS[d]){
+    if (d==="Fri"){ if (p==="p7"||p==="p8") ISAIE_SLOTS.add(d+"|"+p); }
+    else { if (p==="p7"||p==="p8"||p==="p9") ISAIE_SLOTS.add(d+"|"+p); }
+  }
+}
+const CLASSES = ["P1A","P1B","P2","P3","P4","P5","P6"];
+const LOWER = new Set(["P1A","P1B","P2","P3"]);
+const SUBJECTS = ["Kinyarwanda","English","Mathematics","SET","SSRE","Reading","Creative","French"];
+// subject -> class -> [teacher, weeklyPeriods]
+const ASSIGN = {
+  Kinyarwanda:{P1A:["Sarah",7],P1B:["Sarah",7],P2:["Sarah",7],P3:["Sarah",7],P4:["Boniface",7],P5:["Boniface",7],P6:["Boniface",8]},
+  English:{P1A:["Jeannette",5],P1B:["Jeannette",5],P2:["Jeannette",5],P3:["Samy",5],P4:["Natson",5],P5:["Natson",5],P6:["Natson",8]},
+  Mathematics:{P1A:["Schadrack",8],P1B:["Schadrack",8],P2:["Schadrack",8],P3:["Grace",8],P4:["Grace",7],P5:["Natson",7],P6:["Natson",8]},
+  SET:{P1A:["Schadrack",5],P1B:["Schadrack",5],P2:["Schadrack",5],P3:["Sarah",5],P4:["Grace",7],P5:["Grace",7],P6:["Grace",9]},
+  SSRE:{P1A:["Samy",5],P1B:["Samy",5],P2:["Jeannette",5],P3:["Samy",5],P4:["Samy",7],P5:["Boniface",7],P6:["Boniface",8]},
+  Reading:{P1A:["Jeannette",6],P1B:["Jeannette",6],P2:["Jeannette",6],P3:["Samy",6],P4:["Natson",3],P5:["Natson",3],P6:["Natson",1]},
+  Creative:{P1A:["Samy",1],P1B:["Samy",1],P2:["Sarah",1],P3:["Sarah",1],P4:["Boniface",1],P5:["Boniface",1]},
+  French:{P1A:["Meli",7],P1B:["Meli",7],P2:["Meli",7],P3:["Meli",7],P4:["Meli",7],P5:["Isaie",7],P6:["Isaie",2]},
+};
+const PLACEMENT = { Mathematics:"morning_pref", Creative:"afternoon_hard" };
+const DAILY_MAX = 3;
+function consecCapSubject(cls){ return LOWER.has(cls) ? 2 : 3; }
+function consecCapTeacher(cls){ return LOWER.has(cls) ? 2 : 4; }
+function classSubjects(cls){ return SUBJECTS.filter(s => ASSIGN[s][cls]); }
+function teacherOf(cls, subj){ return ASSIGN[subj][cls] ? ASSIGN[subj][cls][0] : null; }
+function quotaOf(cls, subj){ return ASSIGN[subj][cls] ? ASSIGN[subj][cls][1] : 0; }
+
+const SUBJECT_COLORS = {
+  Kinyarwanda:"#e2efda", English:"#ddebf7", Mathematics:"#fff2cc", SET:"#fce4d6",
+  SSRE:"#e2d9f3", Reading:"#d9e1f2", Creative:"#fbe5d6", French:"#d9eac9",
+};
+
+const TEACHERS = ["Sarah","Boniface","Jeannette","Samy","Natson","Schadrack","Grace","Meli","Isaie"];
+const TEACHER_LABEL = { Isaie:"Isaïe" };
+function teacherLabel(t){ return TEACHER_LABEL[t] || t; }
+// which (class,subject) pairs belong to a teacher
+function teacherAssignments(t){
+  const out = [];
+  for (const s of SUBJECTS){
+    for (const c of CLASSES){
+      if (ASSIGN[s][c] && ASSIGN[s][c][0]===t) out.push([c,s]);
+    }
+  }
+  return out;
+}
+function teacherWeeklyTotal(t){
+  return teacherAssignments(t).reduce((sum,[c,s])=>sum+quotaOf(c,s), 0);
+}
+
+/* ============================= STATE ============================= */
+// grid[cls][day+"|"+period] = subject | null
+const grid = {};
+for (const c of CLASSES){ grid[c] = {}; for (const d of DAYS){ for (const p of DAY_PERIODS[d]) grid[c][d+"|"+p] = null; } }
+
+/* ============================= HELPERS ============================= */
+function blockOf(day, period){
+  for (const b of BLOCKS[day]) if (b.includes(period)) return b;
+  return null;
+}
+function countPlaced(cls, subj, excludeKey){
+  let n = 0;
+  for (const key in grid[cls]){
+    if (key===excludeKey) continue;
+    if (grid[cls][key]===subj) n++;
+  }
+  return n;
+}
+function dailyCount(cls, day, subj, excludeKey){
+  let n = 0;
+  for (const p of DAY_PERIODS[day]){
+    const key = day+"|"+p;
+    if (key===excludeKey) continue;
+    if (grid[cls][key]===subj) n++;
+  }
+  return n;
+}
+function teacherBusyElsewhere(day, period, teacher, thisClass){
+  for (const c of CLASSES){
+    if (c===thisClass) continue;
+    const s = grid[c][day+"|"+period];
+    if (s && teacherOf(c,s)===teacher) return c;
+  }
+  return null;
+}
+// would placing subj at (day,period) for cls create a run longer than the soft cap?
+function wouldExceedConsecutive(cls, day, period, subj){
+  const block = blockOf(day, period);
+  const bidx = block.indexOf(period);
+  const teacher = teacherOf(cls, subj);
+  let runS = 1, runT = 1;
+  for (let i=bidx-1; i>=0; i--){
+    const k = day+"|"+block[i];
+    const v = grid[cls][k];
+    if (v===subj) runS++; else break;
+  }
+  for (let i=bidx+1; i<block.length; i++){
+    const k = day+"|"+block[i];
+    const v = grid[cls][k];
+    if (v===subj) runS++; else break;
+  }
+  for (let i=bidx-1; i>=0; i--){
+    const k = day+"|"+block[i];
+    const v = grid[cls][k];
+    if (v && teacherOf(cls,v)===teacher) runT++; else break;
+  }
+  for (let i=bidx+1; i<block.length; i++){
+    const k = day+"|"+block[i];
+    const v = grid[cls][k];
+    if (v && teacherOf(cls,v)===teacher) runT++; else break;
+  }
+  return (runS > consecCapSubject(cls)) || (runT > consecCapTeacher(cls));
+}
+
+/* ============================= UI BUILD ============================= */
+const tabsEl = document.getElementById("tabs");
+const pagesEl = document.getElementById("pages");
+
+const classLabel = document.createElement("span");
+classLabel.className = "nav-group-label";
+classLabel.textContent = "Classes:";
+tabsEl.appendChild(classLabel);
+
+[["all","All Classes"], ...CLASSES.map(c=>[c,c])].forEach(([id,label], idx)=>{
+  const btn = document.createElement("button");
+  btn.textContent = label;
+  btn.dataset.tab = id;
+  if (idx===0) btn.classList.add("active");
+  btn.onclick = ()=> showTab(id);
+  tabsEl.appendChild(btn);
+});
+
+const teacherLabelEl = document.createElement("span");
+teacherLabelEl.className = "nav-group-label";
+teacherLabelEl.textContent = "Teachers:";
+tabsEl.appendChild(teacherLabelEl);
+
+TEACHERS.forEach(t=>{
+  const id = "T:"+t;
+  const btn = document.createElement("button");
+  btn.textContent = teacherLabel(t);
+  btn.dataset.tab = id;
+  btn.onclick = ()=> showTab(id);
+  tabsEl.appendChild(btn);
+});
+
+function showTab(id){
+  document.querySelectorAll("nav button").forEach(b=> b.classList.toggle("active", b.dataset.tab===id));
+  document.querySelectorAll("section.page").forEach(s=> s.classList.toggle("active", s.dataset.page===id));
+  if (id==="all") renderAllClasses();
+  else if (id.startsWith("T:")) renderTeacherPage(id.slice(2));
+}
+
+// Build one class page
+function buildClassPage(cls){
+  const sec = document.createElement("section");
+  sec.className = "page"; sec.dataset.page = cls;
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "toolbar";
+  toolbar.innerHTML = `
+    <button data-act="clear">Clear ${cls}</button>
+    <button data-act="export">Export progress (.json)</button>
+    <label style="display:inline-flex;align-items:center;gap:6px;">Import: <input type="file" data-act="import" accept="application/json"></label>
+    <button data-act="printOne">🖨 Print ${cls} (landscape PDF)</button>
+  `;
+  sec.appendChild(toolbar);
+
+  const banner = document.createElement("div");
+  banner.className = "status-banner pending";
+  banner.dataset.role = "banner";
+  sec.appendChild(banner);
+
+  const legend = document.createElement("div");
+  legend.className = "legend";
+  legend.innerHTML = `
+    <span><span class="swatch" style="background:#fff;border-color:#999"></span> open</span>
+    <span><span class="swatch" style="background:#e2efda"></span> filled (colour = subject)</span>
+    <span><span class="swatch" style="background:#eee;border-color:#ccc"></span> unavailable (hover for reason)</span>
+    <span><span class="swatch" style="background:#fff;border:2px solid #b5651d"></span> allowed but breaks a soft rule (spacing/consecutive)</span>
+  `;
+  sec.appendChild(legend);
+
+  const counters = document.createElement("div");
+  counters.className = "counters";
+  counters.dataset.role = "counters";
+  sec.appendChild(counters);
+
+  const table = document.createElement("table");
+  table.className = "tt";
+  const thead = document.createElement("tr");
+  thead.innerHTML = `<th>Slot</th><th>Time</th>` + DAYS.map(d=>`<th>${d}</th>`).join("");
+  table.appendChild(thead);
+
+  ROW_LAYOUT.forEach(([label,kind])=>{
+    const tr = document.createElement("tr");
+    const slotTd = document.createElement("td");
+    slotTd.className = "slotlabel";
+    slotTd.textContent = kind==="period" ? "Period "+label.slice(1) : label;
+    tr.appendChild(slotTd);
+    const timeTd = document.createElement("td");
+    timeTd.className = "timelabel";
+    timeTd.textContent = PERIOD_TIME[label] || "";
+    tr.appendChild(timeTd);
+
+    DAYS.forEach(day=>{
+      const td = document.createElement("td");
+      if (kind==="break" || kind==="lunch"){
+        td.className = "break-row";
+        td.textContent = kind==="break" ? "Break" : "Lunch";
+      } else {
+        const period = label;
+        if (day==="Fri" && period==="p9"){
+          td.className = "noschool";
+          td.textContent = "—";
+        } else {
+          const sel = document.createElement("select");
+          sel.className = "slot";
+          sel.dataset.cls = cls; sel.dataset.day = day; sel.dataset.period = period;
+          sel.onchange = onSlotChange;
+          td.appendChild(sel);
+          const tag = document.createElement("span");
+          tag.className = "teacher-tag";
+          tag.dataset.role = "teacher-tag";
+          td.appendChild(tag);
+        }
+      }
+      tr.appendChild(td);
+    });
+    table.appendChild(tr);
+  });
+
+  sec.appendChild(table);
+
+  const note = document.createElement("div");
+  note.className = "note";
+  note.innerHTML = `Rules enforced automatically: exact weekly period counts, no teacher double-booked across classes, Creative Arts afternoon-only, French for P5/P6 (Isaïe) only from 14:20, max 3 of the same subject per day. Soft-flagged only (still selectable): more than ${consecCapSubject(cls)} consecutive periods of the same subject or more than ${consecCapTeacher(cls)} consecutive periods with the same teacher (${LOWER.has(cls)?"lower":"upper"} primary limits), and Mathematics outside the morning.`;
+  sec.appendChild(note);
+
+  pagesEl.appendChild(sec);
+
+  toolbar.querySelector('[data-act="clear"]').onclick = ()=>{
+    if (!confirm(`Clear all selections for ${cls}?`)) return;
+    for (const k in grid[cls]) grid[cls][k] = null;
+    refreshAll();
+  };
+  toolbar.querySelector('[data-act="export"]').onclick = ()=> exportProgress();
+  toolbar.querySelector('[data-act="import"]').onchange = (e)=> importProgress(e);
+  toolbar.querySelector('[data-act="printOne"]').onclick = ()=> printOne("class", cls);
+}
+
+function buildAllClassesPage(){
+  const sec = document.createElement("section");
+  sec.className = "page active"; sec.dataset.page = "all";
+  sec.innerHTML = `<div class="toolbar">
+      <button data-act="exportAll">Export all progress (.json)</button>
+      <label style="display:inline-flex;align-items:center;gap:6px;">Import: <input type="file" data-act="importAll" accept="application/json"></label>
+      <button data-act="clearAll">Clear everything</button>
+    </div>
+    <div class="note">Read-only overview of everything filled so far across all classes. Edit inside each class's own tab.</div>
+    <div data-role="all-body"></div>`;
+  pagesEl.appendChild(sec);
+  sec.querySelector('[data-act="exportAll"]').onclick = ()=> exportProgress();
+  sec.querySelector('[data-act="importAll"]').onchange = (e)=> importProgress(e);
+  sec.querySelector('[data-act="clearAll"]').onclick = ()=>{
+    if (!confirm("Clear ALL classes? This cannot be undone.")) return;
+    for (const c of CLASSES) for (const k in grid[c]) grid[c][k] = null;
+    refreshAll();
+  };
+}
+
+function renderAllClasses(){
+  const host = document.querySelector('section[data-page="all"] [data-role="all-body"]');
+  let html = "";
+  DAYS.forEach(day=>{
+    html += `<table class="tt all-classes-table"><tr><th colspan="${2+CLASSES.length}">${day}</th></tr>`;
+    html += `<tr><th>Slot</th><th>Time</th>` + CLASSES.map(c=>`<th>${c}</th>`).join("") + `</tr>`;
+    ROW_LAYOUT.forEach(([label,kind])=>{
+      html += "<tr>";
+      html += `<td class="slotlabel">${kind==="period"?label.toUpperCase():label}</td>`;
+      html += `<td class="timelabel">${PERIOD_TIME[label]||""}</td>`;
+      CLASSES.forEach(c=>{
+        if (kind==="break"||kind==="lunch"){
+          html += `<td class="break-row">${kind==="break"?"Break":"Lunch"}</td>`;
+        } else if (day==="Fri" && label==="p9"){
+          html += `<td class="noschool">—</td>`;
+        } else {
+          const v = grid[c][day+"|"+label];
+          if (v){
+            const t = teacherOf(c,v);
+            html += `<td style="background:${SUBJECT_COLORS[v]||'#fff'}">${v}<br><span style="font-size:0.6rem;color:#555">(${t})</span></td>`;
+          } else {
+            html += `<td></td>`;
+          }
+        }
+      });
+      html += "</tr>";
+    });
+    html += "</table>";
+  });
+  host.innerHTML = html;
+}
+
+function buildTeacherPage(t){
+  const id = "T:"+t;
+  const sec = document.createElement("section");
+  sec.className = "page"; sec.dataset.page = id;
+
+  const toolbar = document.createElement("div");
+  toolbar.className = "toolbar";
+  toolbar.innerHTML = `<button data-act="printOne">🖨 Print ${teacherLabel(t)} (landscape PDF)</button>`;
+  sec.appendChild(toolbar);
+
+  const note = document.createElement("div");
+  note.className = "note";
+  note.innerHTML = `Read-only — this fills in automatically from what's been placed in each class's own tab. Total weekly periods for ${teacherLabel(t)}: <strong>${teacherWeeklyTotal(t)}</strong>.`;
+  sec.appendChild(note);
+
+  const body = document.createElement("div");
+  body.dataset.role = "teacher-body";
+  sec.appendChild(body);
+
+  pagesEl.appendChild(sec);
+  toolbar.querySelector('[data-act="printOne"]').onclick = ()=> printOne("teacher", t);
+}
+
+function renderTeacherPage(t){
+  const sec = document.querySelector(`section[data-page="T:${t}"]`);
+  if (!sec) return;
+  const host = sec.querySelector('[data-role="teacher-body"]');
+  let html = `<table class="tt all-classes-table"><tr><th>Slot</th><th>Time</th>` + DAYS.map(d=>`<th>${d}</th>`).join("") + `</tr>`;
+  let total = 0;
+  ROW_LAYOUT.forEach(([label,kind])=>{
+    html += "<tr>";
+    html += `<td class="slotlabel">${kind==="period"?label.toUpperCase():label}</td>`;
+    html += `<td class="timelabel">${PERIOD_TIME[label]||""}</td>`;
+    DAYS.forEach(day=>{
+      if (kind==="break"||kind==="lunch"){
+        html += `<td class="break-row">${kind==="break"?"Break":"Lunch"}</td>`;
+      } else if (day==="Fri" && label==="p9"){
+        html += `<td class="noschool">—</td>`;
+      } else {
+        let found = null;
+        for (const c of CLASSES){
+          const s = grid[c][day+"|"+label];
+          if (s && teacherOf(c,s)===t){ found = [c,s]; break; }
+        }
+        if (found){
+          total++;
+          html += `<td style="background:${SUBJECT_COLORS[found[1]]||'#fff'}">${found[1]}<br><span style="font-size:0.6rem;color:#555">(${found[0]})</span></td>`;
+        } else {
+          html += `<td></td>`;
+        }
+      }
+    });
+    html += "</tr>";
+  });
+  html += "</table>";
+  host.innerHTML = html;
+  const note = sec.querySelector(".note");
+  if (note) note.innerHTML = `Read-only — this fills in automatically from what's been placed in each class's own tab. Placed so far: <strong>${total}</strong> / ${teacherWeeklyTotal(t)} weekly periods.`;
+}
+
+/* ============================= PRINT / PDF EXPORT ============================= */
+function printTableHTML(dayHeaderList, rowsHTMLFn){
+  let html = `<table class="print-table"><thead><tr><th style="width:9%">Slot</th><th style="width:9%">Time</th>` +
+    dayHeaderList.map(d=>`<th>${d}</th>`).join("") + `</tr></thead><tbody>`;
+  ROW_LAYOUT.forEach(([label,kind])=>{
+    html += "<tr>";
+    html += `<td class="slotlabel">${kind==="period"?"Period "+label.slice(1):label}</td>`;
+    html += `<td class="timelabel">${PERIOD_TIME[label]||""}</td>`;
+    html += rowsHTMLFn(label, kind);
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  return html;
+}
+
+function classPrintPage(cls){
+  const rowsFn = (label, kind)=> DAYS.map(day=>{
+    if (kind==="break"||kind==="lunch") return `<td class="break-row">${kind==="break"?"Break":"Lunch"}</td>`;
+    if (day==="Fri" && label==="p9") return `<td class="noschool">—</td>`;
+    const s = grid[cls][day+"|"+label];
+    if (!s) return `<td class="emptycell"></td>`;
+    const t = teacherOf(cls,s);
+    return `<td class="subjectcell" style="background:${SUBJECT_COLORS[s]||'#fff'}">${s}<span class="sub">${teacherLabel(t)}</span></td>`;
+  }).join("");
+  return `<div class="print-page">
+    <div class="print-title">${cls} — Weekly Timetable</div>
+    <div class="print-subtitle">Ecole La Fontaine · 2026–2027 School Year</div>
+    ${printTableHTML(DAYS, rowsFn)}
+  </div>`;
+}
+
+function teacherPrintPage(t){
+  const rowsFn = (label, kind)=> DAYS.map(day=>{
+    if (kind==="break"||kind==="lunch") return `<td class="break-row">${kind==="break"?"Break":"Lunch"}</td>`;
+    if (day==="Fri" && label==="p9") return `<td class="noschool">—</td>`;
+    let found = null;
+    for (const c of CLASSES){
+      const s = grid[c][day+"|"+label];
+      if (s && teacherOf(c,s)===t){ found = [c,s]; break; }
+    }
+    if (!found) return `<td class="emptycell"></td>`;
+    return `<td class="subjectcell" style="background:${SUBJECT_COLORS[found[1]]||'#fff'}">${found[1]}<span class="sub">${found[0]}</span></td>`;
+  }).join("");
+  return `<div class="print-page">
+    <div class="print-title">${teacherLabel(t)} — Weekly Timetable</div>
+    <div class="print-subtitle">Ecole La Fontaine · 2026–2027 School Year</div>
+    ${printTableHTML(DAYS, rowsFn)}
+  </div>`;
+}
+
+function printOne(kind, key){
+  const area = document.getElementById("printArea");
+  area.innerHTML = kind==="class" ? classPrintPage(key) : teacherPrintPage(key);
+  window.print();
+}
+
+function printAll(){
+  const area = document.getElementById("printArea");
+  let html = "";
+  CLASSES.forEach(c=> html += classPrintPage(c));
+  TEACHERS.forEach(t=> html += teacherPrintPage(t));
+  area.innerHTML = html;
+  window.print();
+}
+document.getElementById("printAllBtn").onclick = printAll;
+
+/* ============================= CORE LOGIC ============================= */
+function onSlotChange(e){
+  const sel = e.target;
+  const cls = sel.dataset.cls, day = sel.dataset.day, period = sel.dataset.period;
+  grid[cls][day+"|"+period] = sel.value || null;
+  refreshAll();
+}
+
+function buildOptionsFor(cls, day, period){
+  const key = day+"|"+period;
+  const current = grid[cls][key];
+  const opts = [{value:"", label:"— empty —", disabled:false, warn:false, title:""}];
+  for (const s of classSubjects(cls)){
+    const teacher = teacherOf(cls,s);
+    const total = quotaOf(cls,s);
+    const placedExcl = countPlaced(cls, s, key);
+    const remaining = total - placedExcl;
+    let disabled = false; const reasons = [];
+
+    if (remaining <= 0 && current !== s){ disabled = true; reasons.push(`all ${total} periods already placed`); }
+
+    const placement = PLACEMENT[s];
+    if (placement==="afternoon_hard" && !AFTERNOON.has(period)){ disabled = true; reasons.push("Creative Arts must be in the afternoon"); }
+    if (teacher==="Isaïe" || teacher==="Isaie"){
+      if (!ISAIE_SLOTS.has(key)){ disabled = true; reasons.push("Isaïe only teaches from 14:20 onward"); }
+    }
+    const dcount = dailyCount(cls, day, s, key);
+    if (dcount >= DAILY_MAX && current !== s){ disabled = true; reasons.push(`already ${dcount}× ${s} on ${day} (max ${DAILY_MAX}/day)`); }
+
+    const otherClass = teacherBusyElsewhere(day, period, teacher, cls);
+    if (otherClass){ disabled = true; reasons.push(`${teacher} is teaching ${otherClass} at this time`); }
+
+    let warn = false;
+    if (!disabled){
+      // temporarily set to check consecutive run, but only if this exact placement (not just remaining) would break it
+      const prevVal = grid[cls][key];
+      grid[cls][key] = s;
+      warn = wouldExceedConsecutive(cls, day, period, s);
+      grid[cls][key] = prevVal;
+    }
+
+    let label = `${s} (${teacher}) — ${remaining>=0?remaining:0} left`;
+    if (disabled) label = `${s} — ${reasons[0]}`;
+    else if (warn) label = `${s} (${teacher}) ⚠ — ${remaining} left`;
+
+    opts.push({value:s, label, disabled: disabled && current!==s, warn, title: reasons.join("; ")});
+  }
+  return opts;
+}
+
+function refreshAll(){
+  document.querySelectorAll("select.slot").forEach(sel=>{
+    const cls = sel.dataset.cls, day = sel.dataset.day, period = sel.dataset.period;
+    const key = day+"|"+period;
+    const current = grid[cls][key] || "";
+    const opts = buildOptionsFor(cls, day, period);
+    sel.innerHTML = "";
+    opts.forEach(o=>{
+      const optEl = document.createElement("option");
+      optEl.value = o.value; optEl.textContent = o.label;
+      optEl.disabled = o.disabled; optEl.title = o.title;
+      sel.appendChild(optEl);
+    });
+    sel.value = current;
+    sel.classList.toggle("filled", !!current);
+    sel.style.background = current ? (SUBJECT_COLORS[current]||"#fff") : "#fff";
+    const isWarn = current && wouldExceedConsecutive(cls, day, period, current);
+    sel.classList.toggle("soft-warn", !!isWarn);
+
+    const tag = sel.nextElementSibling;
+    if (tag && tag.dataset.role==="teacher-tag"){
+      tag.textContent = current ? `(${teacherOf(cls,current)})` : "";
+    }
+  });
+
+  CLASSES.forEach(updateCounters);
+  if (document.querySelector('section[data-page="all"]').classList.contains("active")) renderAllClasses();
+  const activeTeacherBtn = document.querySelector('nav button.active[data-tab^="T:"]');
+  if (activeTeacherBtn) renderTeacherPage(activeTeacherBtn.dataset.tab.slice(2));
+}
+
+function updateCounters(cls){
+  const sec = document.querySelector(`section[data-page="${cls}"]`);
+  if (!sec) return;
+  const host = sec.querySelector('[data-role="counters"]');
+  const banner = sec.querySelector('[data-role="banner"]');
+  let html = "";
+  let allDone = true, anyOver = false;
+  for (const s of classSubjects(cls)){
+    const total = quotaOf(cls,s);
+    const placed = countPlaced(cls, s, null);
+    const cls2 = placed===total ? "done" : (placed>total ? "over" : "");
+    if (placed !== total) allDone = false;
+    if (placed > total) anyOver = true;
+    html += `<span class="chip ${cls2}">${s}: ${placed}/${total}</span>`;
+  }
+  host.innerHTML = html;
+  if (banner){
+    if (allDone){
+      banner.className = "status-banner ok";
+      banner.textContent = `${cls} is fully scheduled — every subject has its exact weekly periods placed.`;
+    } else {
+      banner.className = "status-banner pending";
+      const totalSlots = Object.keys(grid[cls]).length;
+      const filled = Object.values(grid[cls]).filter(Boolean).length;
+      banner.textContent = `${cls}: ${filled}/${totalSlots} slots filled.`;
+    }
+  }
+}
+
+/* ============================= EXPORT / IMPORT ============================= */
+function exportProgress(){
+  const blob = new Blob([JSON.stringify(grid,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "ecole-la-fontaine-timetable-progress.json";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+function importProgress(e){
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const data = JSON.parse(reader.result);
+      for (const c of CLASSES){
+        if (data[c]){
+          for (const k in grid[c]){
+            grid[c][k] = data[c][k] || null;
+          }
+        }
+      }
+      refreshAll();
+      alert("Progress loaded.");
+    }catch(err){
+      alert("Could not read that file: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+}
+
+/* ============================= INIT ============================= */
+CLASSES.forEach(buildClassPage);
+buildAllClassesPage();
+TEACHERS.forEach(buildTeacherPage);
+refreshAll();
+showTab("all");
+</script>
+</body>
+</html>
