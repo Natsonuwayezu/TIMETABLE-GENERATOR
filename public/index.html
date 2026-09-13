@@ -102,35 +102,66 @@
   header .head-row{ display:flex; align-items:flex-start; gap:16px; }
   header .head-row > div:first-child{ flex:1; }
 
+  /* ---------- HOMEWORK ROW (screen) ---------- */
+  table.hw-table{ margin-top:6px; }
+  table.hw-table th{ background:#3a3f38; }
+  table.hw-table td.slotlabel{ background:#efece2; }
+  table.hw-table td.hw-cell{ padding:3px; vertical-align:top; }
+  table.hw-table td.hw-cell .hw-stack{ display:flex; flex-direction:column; gap:3px; }
+  table.hw-table td.hw-cell .hw-plus{
+    font-family:Arial, sans-serif; font-size:0.7rem; color:var(--muted); line-height:1;
+  }
+  table.hw-table td.hw-cell .hw-tag{
+    font-family:Arial, sans-serif; font-size:0.62rem; color:#555; margin-top:2px; display:block;
+    font-style:italic;
+  }
+  table.hw-table th.hw-heading{ font-size:0.72rem; letter-spacing:0.03em; }
+
   /* ---------- PRINT ---------- */
   #printArea{ display:none; }
-  @page{ size: landscape; margin: 10mm; }
+  @page{ size: landscape; margin: 6mm; }
   @media print{
     body{ background:#fff !important; }
     header, nav, #pages{ display:none !important; }
     #printArea{ display:block !important; }
     .print-page{
-      page-break-after: always; width:100%; height:186mm; padding:8mm 10mm;
+      page-break-after: always; width:100%; height:198mm; padding:4mm 6mm;
       display:flex; flex-direction:column; box-sizing:border-box;
     }
     .print-page:last-child{ page-break-after: auto; }
-    .print-title{ font-family:"Georgia","Times New Roman",serif; font-size:26pt; font-weight:700; margin:0 0 2mm; text-align:center; text-transform:uppercase; letter-spacing:0.02em; }
-    .print-subtitle{ font-family:Arial, sans-serif; font-size:11pt; color:#555; margin:0 0 6mm; text-align:center; }
+    .print-title{ font-family:"Georgia","Times New Roman",serif; font-size:20pt; font-weight:700; margin:0 0 1mm; text-align:center; text-transform:uppercase; letter-spacing:0.02em; }
+    .print-subtitle{ font-family:Arial, sans-serif; font-size:9pt; color:#555; margin:0 0 3mm; text-align:center; }
     table.print-table{ border-collapse:collapse; width:100%; table-layout:fixed; flex:1; }
     table.print-table th, table.print-table td{
       border:1.5px solid #888; text-align:center; vertical-align:middle; font-family:Arial, sans-serif;
     }
-    table.print-table th{ background:#1f2a24 !important; color:#fff !important; font-size:15pt; padding:8pt 2pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    table.print-table td.slotlabel{ background:#efece2 !important; font-weight:700; font-size:12pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    table.print-table td.timelabel{ background:#efece2 !important; color:#555; font-size:10.5pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
-    table.print-table td.break-row{ background:#e6e2d6 !important; font-style:italic; color:#777; font-size:11pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.print-table th{ background:#1f2a24 !important; color:#fff !important; font-size:12pt; padding:5pt 2pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.print-table td.slotlabel{ background:#efece2 !important; font-weight:700; font-size:10pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.print-table td.timelabel{ background:#efece2 !important; color:#555; font-size:9pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    table.print-table td.break-row{ background:#e6e2d6 !important; font-style:italic; color:#777; font-size:9.5pt; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     table.print-table td.noschool{ background:#f0f0f0 !important; color:#bbb; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
     table.print-table td.subjectcell{
-      font-size:14pt; font-weight:700; padding:2pt; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+      font-size:11pt; font-weight:700; padding:2pt; -webkit-print-color-adjust:exact; print-color-adjust:exact;
     }
-    table.print-table td.subjectcell .sub{ display:block; font-size:10.5pt; font-weight:400; color:#333; margin-top:2pt; }
+    table.print-table td.subjectcell .sub{ display:block; font-size:8.5pt; font-weight:400; color:#333; margin-top:1pt; }
     table.print-table td.emptycell{ background:#fff; }
-    table.print-table tr{ height:1px; } /* forces even row distribution when table has flex height */
+    table.print-table tr{ height:1px; }
+
+    table.print-table tr.hw-row td.slotlabel{ font-size:9.5pt; }
+    table.print-table tr.hw-row td.timelabel{ font-size:8.5pt; }
+    table.print-table tr.hw-row td.hw-cell{
+      padding:2pt 1pt; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+    }
+    table.print-table tr.hw-row td.hw-cell .hw-item{
+      font-size:9.5pt; font-weight:700; line-height:1.15;
+    }
+    table.print-table tr.hw-row td.hw-cell .hw-item .sub{
+      font-size:7.5pt; font-weight:400; color:#333; display:block;
+    }
+    table.print-table tr.hw-row td.hw-cell .hw-suffix{
+      font-size:7.5pt; font-style:italic; color:#555; display:block; margin-top:1pt;
+    }
+    table.print-table tr.hw-row td.emptycell{ background:#fff; }
   }
 </style>
 </head>
@@ -191,7 +222,6 @@ for (const d of DAYS){
 const CLASSES = ["P1A","P1B","P2","P3","P4","P5","P6"];
 const LOWER = new Set(["P1A","P1B","P2","P3"]);
 const SUBJECTS = ["Kinyarwanda","English","Mathematics","SET","SSRE","Reading","Creative","French"];
-// subject -> class -> [teacher, weeklyPeriods]
 const ASSIGN = {
   Kinyarwanda:{P1A:["Sarah",7],P1B:["Sarah",7],P2:["Sarah",7],P3:["Sarah",7],P4:["Boniface",7],P5:["Boniface",7],P6:["Boniface",8]},
   English:{P1A:["Jeannette",5],P1B:["Jeannette",5],P2:["Jeannette",5],P3:["Samy",5],P4:["Natson",5],P5:["Natson",5],P6:["Natson",8]},
@@ -218,7 +248,6 @@ const SUBJECT_COLORS = {
 const TEACHERS = ["Sarah","Boniface","Jeannette","Samy","Natson","Schadrack","Grace","Meli","Isaie"];
 const TEACHER_LABEL = { Isaie:"Isaïe" };
 function teacherLabel(t){ return TEACHER_LABEL[t] || t; }
-// which (class,subject) pairs belong to a teacher
 function teacherAssignments(t){
   const out = [];
   for (const s of SUBJECTS){
@@ -232,10 +261,27 @@ function teacherWeeklyTotal(t){
   return teacherAssignments(t).reduce((sum,[c,s])=>sum+quotaOf(c,s), 0);
 }
 
+/* ============================= HOMEWORK DATA MODEL ============================= */
+const HOMEWORK_SUBJECTS = ["Mathematics","Kinyarwanda","English","SSRE","SET","French"];
+const HOMEWORK_TIME = "16:20–16:40";
+function homeworkSlotsFor(day){ return day === "Fri" ? 2 : 1; }
+function teacherHomeworkCapacity(day){ return homeworkSlotsFor(day); }
+
+// Next school day (Fri -> Mon wrap)
+function nextSchoolDay(day){
+  const i = DAYS.indexOf(day);
+  return DAYS[(i + 1) % DAYS.length];
+}
+
 /* ============================= STATE ============================= */
-// grid[cls][day+"|"+period] = subject | null
 const grid = {};
 for (const c of CLASSES){ grid[c] = {}; for (const d of DAYS){ for (const p of DAY_PERIODS[d]) grid[c][d+"|"+p] = null; } }
+
+const hwGrid = {};
+for (const c of CLASSES){
+  hwGrid[c] = {};
+  for (const d of DAYS) hwGrid[c][d] = [];
+}
 
 /* ============================= HELPERS ============================= */
 function blockOf(day, period){
@@ -267,7 +313,6 @@ function teacherBusyElsewhere(day, period, teacher, thisClass){
   }
   return null;
 }
-// would placing subj at (day,period) for cls create a run longer than the soft cap?
 function wouldExceedConsecutive(cls, day, period, subj){
   const block = blockOf(day, period);
   const bidx = block.indexOf(period);
@@ -294,6 +339,133 @@ function wouldExceedConsecutive(cls, day, period, subj){
     if (v && teacherOf(cls,v)===teacher) runT++; else break;
   }
   return (runS > consecCapSubject(cls)) || (runT > consecCapTeacher(cls));
+}
+
+/* ============================= HOMEWORK HELPERS ============================= */
+function homeworkSubjectsFor(cls){
+  return HOMEWORK_SUBJECTS.filter(s => ASSIGN[s][cls]);
+}
+
+function homeworkGivenThisWeek(cls, excludeDay, excludeIdx){
+  const given = new Set();
+  for (const d of DAYS){
+    const arr = hwGrid[cls][d] || [];
+    arr.forEach((s, i)=>{
+      if (!s) return;
+      if (d === excludeDay && i === excludeIdx) return;
+      given.add(s);
+    });
+  }
+  return given;
+}
+
+function teacherHomeworkLoadOn(day, excludeCls, excludeIdx){
+  const load = new Map();
+  for (const c of CLASSES){
+    const arr = hwGrid[c][day] || [];
+    arr.forEach((s, i)=>{
+      if (!s) return;
+      if (c === excludeCls && i === excludeIdx) return;
+      const t = teacherOf(c, s);
+      if (!t) return;
+      if (!load.has(t)) load.set(t, []);
+      load.get(t).push({cls:c, idx:i});
+    });
+  }
+  return load;
+}
+
+// Does this class study `subject` on the day AFTER `day`?
+// Used to ensure homework can actually be corrected the next day.
+function subjectStudiedNextDay(cls, day, subject){
+  const next = nextSchoolDay(day);
+  for (const p of DAY_PERIODS[next]){
+    if (grid[cls][next+"|"+p] === subject) return true;
+  }
+  return false;
+}
+
+function buildHomeworkOptions(cls, day, index){
+  const arr = hwGrid[cls][day] || [];
+  const current = arr[index] || "";
+  const opts = [{value:"", label:"— empty —", disabled:false, title:""}];
+
+  const givenThisWeek = homeworkGivenThisWeek(cls, day, index);
+  const teacherLoad = teacherHomeworkLoadOn(day, cls, index);
+  const capacity = teacherHomeworkCapacity(day);
+
+  let eligibleCount = 0;
+
+  for (const s of homeworkSubjectsFor(cls)){
+    const teacher = teacherOf(cls, s);
+    let disabled = false; const reasons = [];
+
+    // Rule 1: per class, each subject at most once per week
+    if (givenThisWeek.has(s) && current !== s){
+      disabled = true;
+      reasons.push(`${s} homework already given to ${cls} this week`);
+    }
+
+    // Rule 2: teacher can cover at most `capacity` classes on this day
+    if (!disabled && current !== s){
+      const entries = teacherLoad.get(teacher) || [];
+      if (entries.length >= capacity){
+        const classesList = entries.map(e=>e.cls).join(", ");
+        disabled = true;
+        reasons.push(`${teacherLabel(teacher)} already has homework for ${classesList} on ${day} (max ${capacity})`);
+      }
+    }
+
+    // Rule 3: subject must appear in the class's next-day timetable (Fri -> Mon)
+    if (!disabled && current !== s){
+      if (!subjectStudiedNextDay(cls, day, s)){
+        const next = nextSchoolDay(day);
+        disabled = true;
+        reasons.push(`${cls} has no ${s} on ${next} to correct it`);
+      }
+    }
+
+    if (!disabled) eligibleCount++;
+
+    opts.push({
+      value: s,
+      label: disabled ? `${s} — ${reasons[0]}` : s,
+      disabled: disabled && current !== s,
+      title: reasons.join("; ")
+    });
+  }
+
+  if (eligibleCount === 0 && !current){
+    opts[0].label = "— no homework available —";
+  }
+
+  return opts;
+}
+
+function setHomework(cls, day, index, value){
+  const n = homeworkSlotsFor(day);
+  const arr = hwGrid[cls][day] ? hwGrid[cls][day].slice() : [];
+  while (arr.length < n) arr.push("");
+  arr[index] = value || "";
+  hwGrid[cls][day] = arr.slice(0, n);
+}
+
+function homeworkOnChange(e){
+  const sel = e.target;
+  setHomework(sel.dataset.cls, sel.dataset.day, parseInt(sel.dataset.idx,10), sel.value);
+  refreshAll();
+}
+
+function teacherHomeworkFor(teacher, day){
+  const hits = [];
+  for (const c of CLASSES){
+    const arr = hwGrid[c][day] || [];
+    arr.forEach((s)=>{
+      if (!s) return;
+      if (teacherOf(c, s) === teacher) hits.push({cls:c, subject:s});
+    });
+  }
+  return hits;
 }
 
 /* ============================= UI BUILD ============================= */
@@ -335,7 +507,6 @@ function showTab(id){
   else if (id.startsWith("T:")) renderTeacherPage(id.slice(2));
 }
 
-// Build one class page
 function buildClassPage(cls){
   const sec = document.createElement("section");
   sec.className = "page"; sec.dataset.page = cls;
@@ -416,6 +587,40 @@ function buildClassPage(cls){
 
   sec.appendChild(table);
 
+  /* ---- HOMEWORK TABLE ---- */
+  const hwTable = document.createElement("table");
+  hwTable.className = "tt hw-table";
+  const hwHead = document.createElement("tr");
+  hwHead.innerHTML = `<th class="hw-heading" colspan="${2+DAYS.length}">Homework · Period 10 · ${HOMEWORK_TIME}</th>`;
+  hwTable.appendChild(hwHead);
+  const hwSubHead = document.createElement("tr");
+  hwSubHead.innerHTML = `<th>Slot</th><th>Time</th>` + DAYS.map(d=>`<th>${d}</th>`).join("");
+  hwTable.appendChild(hwSubHead);
+  const hwRow = document.createElement("tr");
+  const hwSlot = document.createElement("td");
+  hwSlot.className = "slotlabel";
+  hwSlot.textContent = "Homework";
+  hwRow.appendChild(hwSlot);
+  const hwTime = document.createElement("td");
+  hwTime.className = "timelabel";
+  hwTime.textContent = HOMEWORK_TIME;
+  hwRow.appendChild(hwTime);
+  DAYS.forEach(day=>{
+    const td = document.createElement("td");
+    td.className = "hw-cell";
+    td.dataset.role = "hw-cell";
+    td.dataset.cls = cls;
+    td.dataset.day = day;
+    hwRow.appendChild(td);
+  });
+  hwTable.appendChild(hwRow);
+  sec.appendChild(hwTable);
+
+  const hwNote = document.createElement("div");
+  hwNote.className = "note";
+  hwNote.innerHTML = `Homework is <strong>separate</strong> from the weekly subject quotas — it does not count toward them. Rules: (1) each of the 6 homework subjects can be given to a class <strong>at most once per week</strong>; (2) a teacher can cover <strong>one class per homework slot</strong> (Mon–Thu = 1, Friday = 2); (3) a subject can be given as homework only if the class has that subject <strong>the next school day</strong> (Friday → Monday) so it can be corrected.`;
+  sec.appendChild(hwNote);
+
   const note = document.createElement("div");
   note.className = "note";
   note.innerHTML = `Rules enforced automatically: exact weekly period counts, no teacher double-booked across classes, Creative Arts afternoon-only, French for P5/P6 (Isaïe) only from 14:20, max 3 of the same subject per day. Soft-flagged only (still selectable): more than ${consecCapSubject(cls)} consecutive periods of the same subject or more than ${consecCapTeacher(cls)} consecutive periods with the same teacher (${LOWER.has(cls)?"lower":"upper"} primary limits), and Mathematics outside the morning.`;
@@ -424,8 +629,9 @@ function buildClassPage(cls){
   pagesEl.appendChild(sec);
 
   toolbar.querySelector('[data-act="clear"]').onclick = ()=>{
-    if (!confirm(`Clear all selections for ${cls}?`)) return;
+    if (!confirm(`Clear all selections for ${cls} (including homework)?`)) return;
     for (const k in grid[cls]) grid[cls][k] = null;
+    for (const d of DAYS) hwGrid[cls][d] = [];
     refreshAll();
   };
   toolbar.querySelector('[data-act="export"]').onclick = ()=> exportProgress();
@@ -447,8 +653,11 @@ function buildAllClassesPage(){
   sec.querySelector('[data-act="exportAll"]').onclick = ()=> exportProgress();
   sec.querySelector('[data-act="importAll"]').onchange = (e)=> importProgress(e);
   sec.querySelector('[data-act="clearAll"]').onclick = ()=>{
-    if (!confirm("Clear ALL classes? This cannot be undone.")) return;
-    for (const c of CLASSES) for (const k in grid[c]) grid[c][k] = null;
+    if (!confirm("Clear ALL classes (including homework)? This cannot be undone.")) return;
+    for (const c of CLASSES){
+      for (const k in grid[c]) grid[c][k] = null;
+      for (const d of DAYS) hwGrid[c][d] = [];
+    }
     refreshAll();
   };
 }
@@ -480,6 +689,19 @@ function renderAllClasses(){
       });
       html += "</tr>";
     });
+    html += "<tr>";
+    html += `<td class="slotlabel">Homework</td>`;
+    html += `<td class="timelabel">${HOMEWORK_TIME}</td>`;
+    CLASSES.forEach(c=>{
+      const arr = (hwGrid[c][day]||[]).filter(Boolean);
+      if (!arr.length){
+        html += `<td></td>`;
+      } else {
+        const items = arr.map(s=>`<div style="font-weight:700">${s}</div>`).join("");
+        html += `<td style="background:#fbf7e3">${items}</td>`;
+      }
+    });
+    html += "</tr>";
     html += "</table>";
   });
   host.innerHTML = html;
@@ -539,14 +761,27 @@ function renderTeacherPage(t){
     });
     html += "</tr>";
   });
+  html += "<tr>";
+  html += `<td class="slotlabel">Homework</td>`;
+  html += `<td class="timelabel">${HOMEWORK_TIME}</td>`;
+  DAYS.forEach(day=>{
+    const hits = teacherHomeworkFor(t, day);
+    if (!hits.length){
+      html += `<td></td>`;
+    } else {
+      const items = hits.map(h=>`<div style="font-weight:700">${h.subject}<br><span style="font-size:0.6rem;color:#555;font-weight:400">(Homework ${h.cls})</span></div>`).join("");
+      html += `<td style="background:#fbf7e3">${items}</td>`;
+    }
+  });
+  html += "</tr>";
   html += "</table>";
   host.innerHTML = html;
   const note = sec.querySelector(".note");
-  if (note) note.innerHTML = `Read-only — this fills in automatically from what's been placed in each class's own tab. Placed so far: <strong>${total}</strong> / ${teacherWeeklyTotal(t)} weekly periods.`;
+  if (note) note.innerHTML = `Read-only — this fills in automatically from what's been placed in each class's own tab. Placed so far: <strong>${total}</strong> / ${teacherWeeklyTotal(t)} weekly periods. Homework is listed separately (does not count toward the quota).`;
 }
 
 /* ============================= PRINT / PDF EXPORT ============================= */
-function printTableHTML(dayHeaderList, rowsHTMLFn){
+function printTableHTML(dayHeaderList, rowsHTMLFn, hwRowHTML){
   let html = `<table class="print-table"><thead><tr><th style="width:9%">Slot</th><th style="width:9%">Time</th>` +
     dayHeaderList.map(d=>`<th>${d}</th>`).join("") + `</tr></thead><tbody>`;
   ROW_LAYOUT.forEach(([label,kind])=>{
@@ -556,8 +791,34 @@ function printTableHTML(dayHeaderList, rowsHTMLFn){
     html += rowsHTMLFn(label, kind);
     html += "</tr>";
   });
+  html += `<tr class="hw-row">`;
+  html += `<td class="slotlabel">Homework</td>`;
+  html += `<td class="timelabel">${HOMEWORK_TIME}</td>`;
+  html += hwRowHTML();
+  html += `</tr>`;
   html += "</tbody></table>";
   return html;
+}
+
+function classHomeworkRowHTML(cls){
+  return DAYS.map(day=>{
+    const arr = (hwGrid[cls][day]||[]).filter(Boolean);
+    if (!arr.length) return `<td class="emptycell"></td>`;
+    const items = arr.map(s=>`<div class="hw-item">${s}</div>`).join("");
+    const suffix = `<span class="hw-suffix">${arr.length>1 ? "(Homeworks)" : "(Homework)"}</span>`;
+    return `<td class="hw-cell" style="background:#fbf7e3">${items}${suffix}</td>`;
+  }).join("");
+}
+
+function teacherHomeworkRowHTML(t){
+  return DAYS.map(day=>{
+    const hits = teacherHomeworkFor(t, day);
+    if (!hits.length) return `<td class="emptycell"></td>`;
+    const items = hits.map(h=>{
+      return `<div class="hw-item">${h.subject}<span class="sub">(Homework ${h.cls})</span></div>`;
+    }).join("");
+    return `<td class="hw-cell" style="background:#fbf7e3">${items}</td>`;
+  }).join("");
 }
 
 function classPrintPage(cls){
@@ -572,7 +833,7 @@ function classPrintPage(cls){
   return `<div class="print-page">
     <div class="print-title">${cls} Weekly Timetable</div>
     <div class="print-subtitle">Ecole La Fontaine · 2026–2027 School Year</div>
-    ${printTableHTML(DAYS, rowsFn)}
+    ${printTableHTML(DAYS, rowsFn, ()=> classHomeworkRowHTML(cls))}
   </div>`;
 }
 
@@ -591,12 +852,12 @@ function teacherPrintPage(t){
   return `<div class="print-page">
     <div class="print-title">${teacherLabel(t)} Weekly Timetable</div>
     <div class="print-subtitle">Ecole La Fontaine · 2026–2027 School Year</div>
-    ${printTableHTML(DAYS, rowsFn)}
+    ${printTableHTML(DAYS, rowsFn, ()=> teacherHomeworkRowHTML(t))}
   </div>`;
 }
 
 function slugName(name){
-  return name.normalize("NFD").replace(/[\u0300-\u036f]/g,"") // strip accents
+  return name.normalize("NFD").replace(/[\u0300-\u036f]/g,"")
     .replace(/\s+/g,"_").toUpperCase();
 }
 const ORIGINAL_TITLE = document.title;
@@ -658,7 +919,6 @@ function buildOptionsFor(cls, day, period){
 
     let warn = false;
     if (!disabled){
-      // temporarily set to check consecutive run, but only if this exact placement (not just remaining) would break it
       const prevVal = grid[cls][key];
       grid[cls][key] = s;
       warn = wouldExceedConsecutive(cls, day, period, s);
@@ -674,8 +934,54 @@ function buildOptionsFor(cls, day, period){
   return opts;
 }
 
+function renderHomeworkCell(td, cls, day){
+  const arr = hwGrid[cls][day] || [];
+  const n = homeworkSlotsFor(day);
+  while (arr.length < n) arr.push("");
+  td.innerHTML = "";
+  const stack = document.createElement("div");
+  stack.className = "hw-stack";
+
+  for (let i=0; i<n; i++){
+    if (i > 0){
+      const plus = document.createElement("div");
+      plus.className = "hw-plus";
+      plus.textContent = "+";
+      stack.appendChild(plus);
+    }
+    const sel = document.createElement("select");
+    sel.className = "slot";
+    sel.dataset.cls = cls;
+    sel.dataset.day = day;
+    sel.dataset.idx = String(i);
+    sel.dataset.role = "hw-select";
+    sel.onchange = homeworkOnChange;
+    const opts = buildHomeworkOptions(cls, day, i);
+    opts.forEach(o=>{
+      const optEl = document.createElement("option");
+      optEl.value = o.value; optEl.textContent = o.label;
+      optEl.disabled = o.disabled; optEl.title = o.title;
+      sel.appendChild(optEl);
+    });
+    const current = arr[i] || "";
+    sel.value = current;
+    sel.classList.toggle("filled", !!current);
+    sel.style.background = current ? (SUBJECT_COLORS[current]||"#fff") : "#fff";
+    stack.appendChild(sel);
+  }
+
+  if (n > 1){
+    const tag = document.createElement("span");
+    tag.className = "hw-tag";
+    tag.textContent = "(Homeworks)";
+    stack.appendChild(tag);
+  }
+
+  td.appendChild(stack);
+}
+
 function refreshAll(){
-  document.querySelectorAll("select.slot").forEach(sel=>{
+  document.querySelectorAll("select.slot:not([data-role='hw-select'])").forEach(sel=>{
     const cls = sel.dataset.cls, day = sel.dataset.day, period = sel.dataset.period;
     const key = day+"|"+period;
     const current = grid[cls][key] || "";
@@ -697,6 +1003,10 @@ function refreshAll(){
     if (tag && tag.dataset.role==="teacher-tag"){
       tag.textContent = current ? `(${teacherOf(cls,current)})` : "";
     }
+  });
+
+  document.querySelectorAll('td[data-role="hw-cell"]').forEach(td=>{
+    renderHomeworkCell(td, td.dataset.cls, td.dataset.day);
   });
 
   CLASSES.forEach(updateCounters);
@@ -736,13 +1046,38 @@ function updateCounters(cls){
 
 /* ============================= EXPORT / IMPORT ============================= */
 function exportProgress(){
-  const blob = new Blob([JSON.stringify(grid,null,2)], {type:"application/json"});
+  const payload = { grid: grid, hwGrid: hwGrid };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json"});
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url; a.download = "ecole-la-fontaine-timetable-progress.json";
   a.click();
   URL.revokeObjectURL(url);
 }
+
+// After loading grid, clear any homework entry that fails the
+// "subject must exist on the next school day" rule.
+function pruneInvalidHomework(){
+  let removed = 0;
+  for (const c of CLASSES){
+    for (const d of DAYS){
+      const arr = hwGrid[c][d] ? hwGrid[c][d].slice() : [];
+      const kept = [];
+      for (const s of arr){
+        if (!s){ kept.push(""); continue; }
+        if (subjectStudiedNextDay(c, d, s)){
+          kept.push(s);
+        } else {
+          kept.push("");
+          removed++;
+        }
+      }
+      hwGrid[c][d] = kept;
+    }
+  }
+  return removed;
+}
+
 function importProgress(e){
   const file = e.target.files[0];
   if (!file) return;
@@ -750,15 +1085,40 @@ function importProgress(e){
   reader.onload = ()=>{
     try{
       const data = JSON.parse(reader.result);
+      const gridData  = data.grid   ? data.grid   : data;
+      const hwData    = data.hwGrid ? data.hwGrid : null;
+
       for (const c of CLASSES){
-        if (data[c]){
+        if (gridData[c]){
           for (const k in grid[c]){
-            grid[c][k] = data[c][k] || null;
+            grid[c][k] = gridData[c][k] || null;
           }
         }
       }
+
+      if (hwData){
+        for (const c of CLASSES){
+          if (!hwData[c]) continue;
+          for (const d of DAYS){
+            const arr = Array.isArray(hwData[c][d]) ? hwData[c][d] : [];
+            const n = homeworkSlotsFor(d);
+            hwGrid[c][d] = arr.slice(0, n).map(x => x || "");
+            while (hwGrid[c][d].length < n) hwGrid[c][d].push("");
+          }
+        }
+      }
+
+      // Automatically drop homework entries that no longer pass the
+      // next-day correction rule (uses the just-loaded timetable).
+      const removed = pruneInvalidHomework();
+
       refreshAll();
-      alert("Progress loaded.");
+      let msg = "Progress loaded.";
+      if (!hwData) msg += " (No homework data found — homework left as-is.)";
+      if (removed > 0){
+        msg += `\n\nCleared ${removed} homework entr${removed===1?"y":"ies"} that didn't have the subject the next school day. You can now refill them from the dropdowns — only valid choices are shown.`;
+      }
+      alert(msg);
     }catch(err){
       alert("Could not read that file: " + err.message);
     }
